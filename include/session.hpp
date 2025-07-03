@@ -5,12 +5,16 @@
 #include <iostream>
 #include <memory>
 
-using boost::asio::ip::tcp:
+using boost::asio::ip::tcp;
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
     //constructor takes ownershiper of socket
-    Session(tcp::socket socket) : socket_(std::move(socket)) {}
+    Session(tcp::socket socket) : socket_(std::move(socket)) {
+        std::cout << "Session created." << std::endl;
+    }
+
+    ~Session(){ std::cout << "Session destroyed." << std::endl; }
 
     void start(){ do_read(); }
 
@@ -26,7 +30,7 @@ private:
             [this, self](boost::system::error_code ec, size_t length){
                 if(!ec){
                     do_write(length);
-                }else{
+                }else if (ec != boost::asio::error::eof){
                     std::cerr << "Read error: " << ec.message() << std::endl;
                 }
             });
@@ -35,10 +39,10 @@ private:
     void do_write(size_t length) {
         auto self(shared_from_this());
 
-        boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+        boost::asio::async_write(socket_, boost::asio::buffer(data, length),
             [this, self](boost::system::error_code ec, size_t length){
                 if(!ec){
-                    do_read()
+                    do_read();
                 }else{
                     std::cerr << "Write error: " << ec.message() << std::endl;
                 }
