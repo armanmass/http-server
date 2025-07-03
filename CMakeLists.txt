@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.22)
+
+project(HTTPServer VERSION 1.0 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Boost 1.74.0 REQUIRED COMPONENTS system)
+
+add_executable(http_server src/main.cpp)
+
+target_link_libraries(http_server PRIVATE Boost::system)
+
+target_include_directories(http_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(http_server PRIVATE ${Boost_INCLUDE_DIRS})
+
+enable_testing()
+add_subdirectory(tests)
