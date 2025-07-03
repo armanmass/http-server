@@ -5,12 +5,17 @@
 #include <boost/asio.hpp>
 #include "server.hpp"
 
-int main(){
+int main(int argc, char* argv[]){
     try {
+        if(argc != 2){
+            std::cerr << "Usage: http_server <doc_root>\n";
+            return -1;
+        }
+        const std::string doc_root = argv[1];
         const short port = 8080;
         boost::asio::io_context io_context;
 
-        Server s(io_context, port);
+        Server s(io_context, port, doc_root);
         std::cout << "Server listening on port " << port << "." << std::endl;
 
         const short num_threads = 4;

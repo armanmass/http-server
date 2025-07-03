@@ -7,7 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Boost 1.74.0 REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
 
-add_executable(http_server src/main.cpp)
+add_executable(http_server 
+    src/main.cpp
+    src/http_response.cpp
+    src/request_handler.cpp
+)
+
+#target_sources(http_server PRIVATE src/http_response.cpp src/request_handler.cpp)
 
 target_link_libraries(http_server PRIVATE Boost::system)
 
