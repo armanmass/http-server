@@ -6,7 +6,8 @@
 #include <map>
 
 struct HttpRequest {
-    std::map<std::string, std::string> headers;
+    // swapped from map to vector to allow duplicate keys
+    std::vector<std::pair<std::string, std::string>> headers;
 
     int http_version_major;
     int http_version_minor;

@@ -14,5 +14,9 @@ TEST(ParserTest, SimpleGETRequest){
     EXPECT_EQ(req.uri, "/index.html");
     EXPECT_EQ(req.http_version_major, 1);
     EXPECT_EQ(req.http_version_minor, 1);
-    EXPECT_EQ(req.headers["Host"], "www.test.com");
+
+    auto host_header = std::find_if(req.headers.begin(), req.headers.end(),
+                        [](const auto& h) { return h.first == "Host"; });
+    ASSERT_NE(host_header, req.headers.end());
+    EXPECT_EQ(host_header->second, " www.test.com");
 }
