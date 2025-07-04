@@ -34,7 +34,7 @@ void RequestHandler::handle_request(const HttpRequest& req, HttpResponse& res){
     size_t last_dot_pos = request_path.find_last_of(".");
     std::string extension;
     if(last_dot_pos != std::string::npos)
-        extension = request_path.subtr(last_dot_pos)
+        extension = request_path.substr(last_dot_pos);
     
         std::string full_path = doc_root_ + request_path;
         if(full_path.find("..") != std::string::npos){
@@ -64,12 +64,12 @@ bool RequestHandler::url_decode(const std::string& in, std::string& out){
     out.reserve(in.size());
 
     for(std::size_t i=0; i<in.size(); i++){
-        if(in[i] = '%'){
+        if(in[i] == '%'){
             if(i+3 <= in.size()){
                 int val = 0;
                 std::istringstream is(in.substr(i+1,2));
-                if(is >> std::hex >> value){
-                    out += static_cast<char>(value);
+                if(is >> std::hex >> val){
+                    out += static_cast<char>(val);
                     i += 2;
                 }else{ return false; }
             }else{ return false; }
