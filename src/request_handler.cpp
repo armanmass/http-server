@@ -52,11 +52,14 @@ void RequestHandler::handle_request(const HttpRequest& req, HttpResponse& res){
     char buf[512];
     while(is.read(buf, sizeof(buf)).gcount() > 0)
         res.content.append(buf, is.gcount());
-    res.headers.resize(2);
+
+    res.headers.resize(3);
     res.headers[0].first = "Content-Length";
     res.headers[0].second = std::to_string(res.content.size());
     res.headers[1].first = "Content-Type";
     res.headers[1].second = mime_type(extension);
+    res.headers[2].first = "Connection";
+    res.headers[2].second = "keep-alive";
 }
 
 bool RequestHandler::url_decode(const std::string& in, std::string& out){

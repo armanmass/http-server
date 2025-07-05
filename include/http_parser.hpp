@@ -7,8 +7,30 @@
 class HttpRequestParser{
 public:
     enum class ResultType {GOOD, BAD, INDETERMINATE};
+    enum State {
+        METHOD_START,
+        METHOD,
+        URI,
+        HTTP_VERSION_H,
+        HTTP_VERSION_T1,
+        HTTP_VERSION_T2,
+        HTTP_VERSION_P,
+        HTTP_VERSION_SLASH,
+        HTTP_VERSION_MAJOR,
+        HTTP_VERSION_MINOR,
+        HEADER_LINE_START,
+        HEADER_LWS,
+        HEADER_NAME,
+        HEADER_VALUE_START,
+        HEADER_VALUE,
+        EXPECTING_NEWLINE_1,
+        EXPECTING_NEWLINE_2,
+        EXPECTING_NEWLINE_3
+    };  
 
     void reset() { state_ = METHOD_START; }
+    
+    State get_state() const { return state_; }
 
     template <typename InputIterator>
     std::tuple<ResultType, InputIterator> parse(
@@ -23,10 +45,11 @@ public:
                 return {result, begin};
             }
         }
-        return {ResultType::BAD, begin};
+        return {ResultType::INDETERMINATE, begin};
     }
 
 private:
+    State state_ = State::METHOD_START;
     // ai generated function
     // state machine to process text
     ResultType consume(HttpRequest& req, char input){
@@ -82,9 +105,16 @@ private:
             req.headers.back().second.push_back(input);
             return ResultType::INDETERMINATE;
         case HEADER_NAME:
-            if (input == ':') { state_ = HEADER_VALUE; return ResultType::INDETERMINATE; }
+            if (input == ':') { state_ = HEADER_VALUE_START; return ResultType::INDETERMINATE; }
             if (!is_char(input) || is_ctl(input) || is_tspecial(input)) { return ResultType::BAD; }
             req.headers.back().first.push_back(input);
+            return ResultType::INDETERMINATE;
+        case HEADER_VALUE_START:
+            if (input == '\r') { state_ = EXPECTING_NEWLINE_2; return ResultType::INDETERMINATE; }
+            if (input == ' ' || input == '\t') { return ResultType::INDETERMINATE; }
+            if (is_ctl(input)) { return ResultType::BAD; }
+            state_ = HEADER_VALUE;
+            req.headers.back().second.push_back(input);
             return ResultType::INDETERMINATE;
         case HEADER_VALUE:
             if (input == '\r') { state_ = EXPECTING_NEWLINE_2; return ResultType::INDETERMINATE; }
@@ -100,25 +130,6 @@ private:
         }
     }
 
-    enum State {
-        METHOD_START,
-        METHOD,
-        URI,
-        HTTP_VERSION_H,
-        HTTP_VERSION_T1,
-        HTTP_VERSION_T2,
-        HTTP_VERSION_P,
-        HTTP_VERSION_SLASH,
-        HTTP_VERSION_MAJOR,
-        HTTP_VERSION_MINOR,
-        EXPECTING_NEWLINE_1,
-        HEADER_LINE_START,
-        HEADER_LWS,
-        HEADER_NAME,
-        HEADER_VALUE,
-        EXPECTING_NEWLINE_2,
-        EXPECTING_NEWLINE_3
-    } state_ = METHOD_START;
 
     static bool is_char(int c) { return c >= 0 && c <= 127; }
     static bool is_ctl(int c) { return (c >= 0 && c <= 31) || (c == 127); }

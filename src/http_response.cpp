@@ -58,10 +58,13 @@ HttpResponse HttpResponse::stock_response(HttpResponse::StatusType status){
     HttpResponse res;
     res.status = status;
     res.content = stock_replies::to_string(status);
-    res.headers.resize(2);
+
+    res.headers.resize(3);
     res.headers[0].first = "Content-Length";
     res.headers[0].second = std::to_string(res.content.size());
     res.headers[1].first = "Content-Type";
     res.headers[1].second = "text/html";
+    res.headers[2].first = "Connection";
+    res.headers[2].second = "close";
     return res;
 }
