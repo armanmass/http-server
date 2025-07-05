@@ -6,7 +6,7 @@ namespace status_strings {
     const std::string ok = "HTTP/1.1 200 OK\r\n";
     const std::string not_found = "HTTP/1.1 404 Not Found\r\n";
     const std::string bad_request = "HTTP/1.1 400 Bad Request\r\n";
-
+    
     boost::asio::const_buffer to_buffer(HttpResponse::StatusType status){
         switch(status){
             case HttpResponse::ok: return boost::asio::buffer(ok);

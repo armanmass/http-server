@@ -8,6 +8,8 @@ class HttpRequestParser{
 public:
     enum class ResultType {GOOD, BAD, INDETERMINATE};
 
+    void reset() { state_ = METHOD_START; }
+
     template <typename InputIterator>
     std::tuple<ResultType, InputIterator> parse(
         HttpRequest& req,

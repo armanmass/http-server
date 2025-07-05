@@ -31,19 +31,21 @@ private:
 
         //async read data from buffer
         //lambda is completion handler
-        socket_.async_read_some(boost::asio::buffer(data, max_length),
+        socket_.async_read_some(boost::asio::buffer(buffer_.prepare(1024)),
             [this, self](boost::system::error_code ec, size_t length){
                 if(!ec){
-                    auto [result,_] = parser_.parse(request_,data,data+length);
+                    buffer_.commit(length);
+                    std::istream request_stream(&buffer_);
+                    std::string request_string((std::istreambuf_iterator<char>(request_stream)), std::istreambuf_iterator<char>());
+
+                    auto [result, _] = parser_.parse(request_, request_string.begin(), request_string.end());
 
                     if(result == HttpRequestParser::ResultType::GOOD){
                         request_handler_.handle_request(request_, response_);
-                        do_write(length);
-                    }else if(result == HttpRequestParser::ResultType::BAD){
-                        response_ = HttpResponse::stock_response(HttpResponse::bad_request);
-                        do_write(length);
+                        do_write();
                     }else{
-                        do_read();
+                        response_ = HttpResponse::stock_response(HttpResponse::bad_request);
+                        do_write();
                     }
                 }else if (ec != boost::asio::error::eof){
 
@@ -52,25 +54,28 @@ private:
             });
     }
 
-    void do_write(size_t length) {
+    void do_write() {
         auto self(shared_from_this());
 
-        boost::asio::async_write(socket_, boost::asio::buffer(data, length),
+        boost::asio::async_write(socket_, buffer_,
             [this, self](boost::system::error_code ec, size_t length){
                 if(!ec){
-                    boost::system::error_code ignored_ec;
-                    socket_.shutdown(tcp::socket::shutdown_both, ignored_ec);
+                    request_ = {};
+                    response_ = {};
+                    parser_.reset();
+
+                    do_read();
                 }else{
                     std::cerr << "Write error: " << ec.message() << std::endl;
                 }
             });
     }
 
-    tcp:: socket socket_;
-    static constexpr size_t max_length = 1024;
-    char data[max_length];
-
+    tcp::socket socket_;
     RequestHandler& request_handler_;
+
+    boost::asio::streambuf buffer_;
+
     HttpRequestParser parser_;
     HttpRequest request_;
     HttpResponse response_;
